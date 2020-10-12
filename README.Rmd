@@ -25,13 +25,15 @@ Two strategies have been suggested to get around this:
 1. Importance sampling (suggested in various ADMB/TMB documentation files).
 2. Metropolis-Hastings (built into `mgcv` in `gam.mh`)
 
-
 Note that there is a bug in `mgcv::gam.mh`, spotted by Len Thomas. A patched version is included here until a fix is in `mgcv`.
 
+I've added code for importance sampling here, using tools provided in `mcmc.r` in the `mgcv` source.
 
 ## Example
 
 This is based on `gam.mh` example with a [fix from Eric Pedersen](https://gist.github.com/eric-pedersen/69181a972de93db3657489c9d356f01f).
+
+The importance "sampling" here uses importance *weights* to calculate quantiles, one could also do a second sampling here (and potentially incur additional monte carlo error?).
 
 ```{r message=FALSE}
 library(mgcv)
