@@ -48,11 +48,18 @@ Two strategies have been suggested to get around this:
 Note that there is a bug in `mgcv::gam.mh`, spotted by Len Thomas. A
 patched version is included here until a fix is in `mgcv`.
 
+I’ve added code for importance sampling here, using tools provided in
+`mcmc.r` in the `mgcv` source.
+
 Example
 -------
 
 This is based on `gam.mh` example with a [fix from Eric
 Pedersen](https://gist.github.com/eric-pedersen/69181a972de93db3657489c9d356f01f).
+
+The importance “sampling” here uses importance *weights* to calculate
+quantiles, one could also do a second sampling here (and potentially
+incur additional monte carlo error?).
 
     library(mgcv)
     library(Hmisc) # for weighted quantiles
