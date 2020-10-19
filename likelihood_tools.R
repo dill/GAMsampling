@@ -7,27 +7,9 @@
 ## some functions to extract important components of joint density from
 ## fitted gam...
 
-# old
-#bSb <- function(b,beta=coef(b)) {
-### evaluate penalty for fitted gam, possibly with new beta
-#  bSb <- k <-  0
-#  sp <- if (is.null(b$full.sp)) b$sp else b$full.sp ## handling linked sp's
-#  for (i in 1:length(b$smooth)) {
-#    m <- length(b$smooth[[i]]$S)
-#    if (m) {
-#      ii <- b$smooth[[i]]$first.para:b$smooth[[i]]$last.para
-#      for (j in 1:m) {
-#        k <- k + 1
-#        bSb <- bSb + sp[k]*(t(beta[ii])%*%b$smooth[[i]]$S[[j]]%*%beta[ii])
-#      }
-#    }  
-#  }
-#  bSb
-#} ## bSb
-
+## evaluate penalty for fitted gam, possibly with new beta
 # patched to include parapen
 bSb <- function(b,beta=coef(b)) {
-## evaluate penalty for fitted gam, possibly with new beta
   bSb <- k <-  0
   sp <- if (is.null(b$full.sp)) b$sp else b$full.sp ## handling linked sp's
   for (i in 1:length(b$smooth)) {
@@ -42,8 +24,6 @@ bSb <- function(b,beta=coef(b)) {
   }
 
   # now the parapen bits
-  # parapen sp always first?
-  k <- 1
   # need to do something clever with L at some point
   if(!is.null(b$paraPen)){
     for (i in 1:length(b$paraPen$S)) {
@@ -51,7 +31,8 @@ bSb <- function(b,beta=coef(b)) {
       ii <- b$paraPen$off[i]
       ii <- ii:(ii+ncol(b$paraPen$S[[i]])-1)
       # add to penalty
-      bSb <- bSb + sp[k]*(t(beta[ii])%*%b$paraPen$S[[i]]%*%beta[ii])
+      bSb <- bSb + sp[b$paraPen$full.sp.names[i]]*
+                    (t(beta[ii])%*%b$paraPen$S[[i]]%*%beta[ii])
       k <- k + 1
     }
   }
