@@ -12,6 +12,23 @@
 bSb <- function(b,beta=coef(b)) {
   bSb <- k <-  0
   sp <- if (is.null(b$full.sp)) b$sp else b$full.sp ## handling linked sp's
+
+
+  # the parapen bits
+  # need to do something clever with L at some point
+  if(!is.null(b$paraPen)){
+    for (i in 1:length(b$paraPen$S)) {
+      k <- k + 1
+      # get indices
+      ii <- b$paraPen$off[i]
+      ii <- ii:(ii+ncol(b$paraPen$S[[i]])-1)
+      # add to penalty
+      bSb <- bSb + sp[b$paraPen$full.sp.names[i]]*
+                    (t(beta[ii])%*%b$paraPen$S[[i]]%*%beta[ii])
+    }
+  }
+
+
   for (i in 1:length(b$smooth)) {
     m <- length(b$smooth[[i]]$S)
     if (m) {
@@ -23,19 +40,6 @@ bSb <- function(b,beta=coef(b)) {
     }
   }
 
-  # now the parapen bits
-  # need to do something clever with L at some point
-  if(!is.null(b$paraPen)){
-    for (i in 1:length(b$paraPen$S)) {
-      # get indices
-      ii <- b$paraPen$off[i]
-      ii <- ii:(ii+ncol(b$paraPen$S[[i]])-1)
-      # add to penalty
-      bSb <- bSb + sp[b$paraPen$full.sp.names[i]]*
-                    (t(beta[ii])%*%b$paraPen$S[[i]]%*%beta[ii])
-      k <- k + 1
-    }
-  }
 
   bSb
 } ## bSb
