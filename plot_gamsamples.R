@@ -1,13 +1,21 @@
 # Term plotting for GAM posterior samples
-# library(mgcv)
-# library(grDevices)
+
+# Note that only univariate terms can be plotted, bivariate terms
+# raise an error. Also you can only plot one term at a time, unlike plot.gam
+
+# Example:
 #
-# set.seed(2)
-# dat <- gamSim(1,n=400,dist="normal",scale=2)
-# b <- gam(y~s(x0)+s(x1)+s(x2)+s(x3),data=dat)
-#
-# samples <- rmvn(200, coef(model), vcov(model))
-# plot_gamsamples(b, samples, 3)
+ library(mgcv)
+ library(grDevices)
+
+ set.seed(2)
+ dat <- gamSim(1,n=400,dist="normal",scale=2)
+dat$o <- runif(400)
+ #b <- gam(y~s(x0)+s(x1)+s(x2)+s(x3),data=dat)
+ b <- gam(y~s(x0)+s(x1)+s(x2,x3) + o, data=dat)
+
+ samples <- rmvn(200, coef(b), vcov(b))
+ plot_gamsamples(b, samples, 2)
 
 plot_gamsamples <- function(model, samples, select=NULL, ...){
 
@@ -15,10 +23,32 @@ plot_gamsamples <- function(model, samples, select=NULL, ...){
   i <- select
 
   # get plot data
-  plotdat <- plot(model, select=i, col="white", ...)
+  plotdat <- plot(model, select=i, col="white", n=200, n2=200, ...)
+
+  if(!is.null(dim(plotdat[[i]]$raw))){
+    stop("Smooths with > 1 term are not supported")
+  }
+
   # extract and setup prediction data
-  pdat <- as.data.frame(lapply(plotdat, `[[`, name="x"))
-  names(pdat) <- unlist(lapply(plotdat, `[[`, name="xlab"))
+  pdat <- list()
+  for(ii in seq_along(plotdat)){
+    if(is.null(dim(plotdat[[ii]]$raw))){
+      pdat[[ii]] <- as.data.frame(plotdat[[ii]]$x)
+      names(pdat[[ii]]) <- plotdat[[ii]]$xlab
+    }else{
+      pdat[[ii]] <- data.frame(x1=plotdat[[ii]]$x, x2=plotdat[[ii]]$y)
+      names(pdat[[ii]]) <- c(plotdat[[ii]]$xlab, plotdat[[ii]]$ylab)
+    }
+  }
+
+  pdat <- do.call(cbind.data.frame, pdat)
+
+  # generate nonsmooth terms
+  nst <- setdiff(attr(model$terms, "term.labels"), names(pdat))
+  for(ii in seq_along(nst)){
+    pdat[[ nst[ii] ]] <- 0
+  }
+
   # generate lp matrix
   lp <- predict(model, newdata=pdat, type="lpmatrix")
 
