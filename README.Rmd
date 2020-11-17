@@ -2,7 +2,7 @@
 
 This repo has some example code for posterior sampling from GAMs as fitted by `mgcv`.
 
-Thanks to Simon Wood, Eric Pedersen and Len Thomas for their contributions and assistance with various parts of this.
+Thanks to Simon Wood, Eric Pedersen, Len Thomas and Jason Roberts for their contributions and assistance with various parts of this.
 
 ## Background
 

@@ -5,20 +5,21 @@
 
 # Example:
 #
- library(mgcv)
- library(grDevices)
+# library(mgcv)
+# library(grDevices)
+#
+# set.seed(2)
+# dat <- gamSim(1,n=400,dist="normal",scale=2)
+# b <- gam(y~s(x0)+s(x1)+s(x2)+s(x3),data=dat)
+#
+# samples <- rmvn(200, coef(b), vcov(b))
+# plot_gamsamples(b, samples, 2)
 
- set.seed(2)
- dat <- gamSim(1,n=400,dist="normal",scale=2)
-dat$o <- runif(400)
- #b <- gam(y~s(x0)+s(x1)+s(x2)+s(x3),data=dat)
- b <- gam(y~s(x0)+s(x1)+s(x2,x3) + o, data=dat)
+# Contributions from Jason Roberts for transformations of the variables
+# and fixed effects support.
 
- samples <- rmvn(200, coef(b), vcov(b))
- plot_gamsamples(b, samples, 2)
-
-plot_gamsamples <- function(model, samples, select=NULL, ...){
-
+plot_gamsamples <- function(model, samples, select=NULL, ...)
+{
   # lazy
   i <- select
 
@@ -31,23 +32,20 @@ plot_gamsamples <- function(model, samples, select=NULL, ...){
 
   # extract and setup prediction data
   pdat <- list()
-  for(ii in seq_along(plotdat)){
-    if(is.null(dim(plotdat[[ii]]$raw))){
-      pdat[[ii]] <- as.data.frame(plotdat[[ii]]$x)
-      names(pdat[[ii]]) <- plotdat[[ii]]$xlab
+  i.name <- all.vars(as.formula(paste0("~",plotdat[[i]]$xlab)))
+  i.x <- seq(model$var.summary[[i.name]][1], 
+             model$var.summary[[i.name]][3], 
+             length.out=length(plotdat[[i]]$x)) # Can't use plotdat[[i]]$x directly; it could be transformed
+
+  for (v in names(model$var.summary)){
+    if (v == i.name){
+      pdat[[v]] <- i.x
     }else{
-      pdat[[ii]] <- data.frame(x1=plotdat[[ii]]$x, x2=plotdat[[ii]]$y)
-      names(pdat[[ii]]) <- c(plotdat[[ii]]$xlab, plotdat[[ii]]$ylab)
+      pdat[[v]] <- model$var.summary[[v]][1]
     }
   }
 
   pdat <- do.call(cbind.data.frame, pdat)
-
-  # generate nonsmooth terms
-  nst <- setdiff(attr(model$terms, "term.labels"), names(pdat))
-  for(ii in seq_along(nst)){
-    pdat[[ nst[ii] ]] <- 0
-  }
 
   # generate lp matrix
   lp <- predict(model, newdata=pdat, type="lpmatrix")
@@ -62,9 +60,12 @@ plot_gamsamples <- function(model, samples, select=NULL, ...){
 
   # get a transparent grey for samples
   grey_t <- adjustcolor("grey60", alpha.f=0.4)
+  
+  # apply the transform, if present, to the x coords before plotting
+  i.x <- eval(parse(text=plotdat[[i]]$xlab), envir=pdat)
 
   # plot all those samples
-  apply(lp, 2, lines, x=pdat[[names(pdat)[i]]], col=grey_t, lwd=0.5)
+  apply(lp, 2, lines, x=i.x, col=grey_t, lwd=0.5)
 
   # overplot the old mean/se lines
   lines(plotdat[[i]]$x, plotdat[[i]]$fit[,1])
@@ -74,5 +75,5 @@ plot_gamsamples <- function(model, samples, select=NULL, ...){
   lines(plotdat[[i]]$x,
         plotdat[[i]]$fit[,1] - plotdat[[i]]$se,
         lty=2)
-
 }
+
